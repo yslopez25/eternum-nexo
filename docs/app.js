@@ -170,6 +170,15 @@ function doNexoEvent(){
 }
 
 function doDiplomacy(){
+  function checkVictory(){
+  const winner = state.players.find(p => p.points >= 10);
+  if(winner){
+    gameOver = true;
+    log(`🏆 ${winner.name} alcanza 10 Puntos de Nexo. ¡Victoria!`);
+    alert(`🏆 ${winner.name} gana la partida`);
+  }
+}
+
   if(state.players.length<2) return;
   if(Math.random()<0.2){
     const a = state.players[rand(state.players.length)];
