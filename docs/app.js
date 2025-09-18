@@ -193,16 +193,13 @@ function doDiplomacy(){
 function nextPhase
 
 function newGame(players=3){
+  gameOver = false;
   state.turn = 1; state.phase = 0; state.log = [];
   newBoard();
   newPlayers(players);
   renderAll();
   log("Nueva partida creada.");
 }
-
-// --- Render ---
-const canvas = document.getElementById("board");
-const ctx = canvas.getContext("2d");
 
 function drawBoard(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -251,6 +248,10 @@ function renderAll(){ drawBoard(); renderSidebar(); }
 // --- Eventos UI ---
 document.getElementById("newGame").addEventListener("click", ()=>newGame(3));
 document.getElementById("nextPhase").addEventListener("click", nextPhase);
+document.getElementById("newGame").addEventListener("click", ()=>newGame(3));
+document.getElementById("nextPhase").addEventListener("click", nextPhase);
+document.getElementById("resetGame").addEventListener("click", ()=>newGame(3));
+
 
 // Boot
 newGame(3);
