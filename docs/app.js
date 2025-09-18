@@ -7,6 +7,13 @@ const CIVS = [
   { id:"tech", name:"Tecnomantes", bonus:"shift_island" },
 ];
 
+// --- Config extra ---
+const LOG_LIMIT = 40;
+let gameOver = false;
+
+// (aquí sigue el resto de tu código con rand(), roll2d6(), state, etc.)
+
+
 function rand(n){ return Math.floor(Math.random()*n); }
 function roll2d6(){ return 1+rand(6) + 1+rand(6); }
 
