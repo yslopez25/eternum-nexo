@@ -6,7 +6,8 @@ h1{font-weight:700;margin:0 0 12px 0}
 .bar button:hover{filter:brightness(1.1)}
 .status{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
 #players{background:#12193a;border:1px solid #1d2554;border-radius:12px;padding:8px;min-height:100px}
-#log{background:#12193a;border:1px solid #1d2554;border-radius:12px;padding:8px;min-height:100px;max-height:200px;overflow:auto}
-#board{background:#0c1433;border:1px solid #1d2554;border-radius:12px;display:block;width:100%}
+#log{background:#12193a;border:1px solid #1d2554;border-radius:12px;padding:8px;min-height:100px;max-height:220px;overflow:auto}
+#board{background:#0c1433;border:1px solid #1d2554;border-radius:12px;display:block;width:100%;min-height:320px}
 .tag{display:inline-block;margin:4px 6px 0 0;padding:2px 6px;border-radius:8px;background:#1d2554}
 .small{opacity:.85;font-size:.9em}
+
