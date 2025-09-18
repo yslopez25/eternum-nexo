@@ -8,8 +8,9 @@ const CIVS = [
 ];
 
 // --- Config extra ---
-const LOG_LIMIT = 40;  // número máximo de líneas en el log
-let gameOver = false;
+const LOG_LIMIT = 40;              // máximo de líneas de log
+let gameOver = false;              // detener juego al ganar
+const PLAYER_COLORS = ["#6ee7b7","#93c5fd","#f9a8d4","#fcd34d"]; // glow por jugador
 
 function rand(n){ return Math.floor(Math.random()*n); }
 function roll2d6(){ return 1+rand(6) + 1+rand(6); }
@@ -44,7 +45,6 @@ function newBoard(){
 
 function newPlayers(n=3){
   state.players = [];
-  const colors = ["#6ee7b7","#93c5fd","#f9a8d4","#fcd34d"];
   for(let i=0;i<n;i++){
     const civ = CIVS[i % CIVS.length];
     state.players.push({
@@ -53,7 +53,7 @@ function newPlayers(n=3){
       civ,
       resources:{food:3, energy:1, metal:2},
       points:0,
-      color: colors[i],
+      color: PLAYER_COLORS[i % PLAYER_COLORS.length],
     });
   }
   // Asignar casillas iniciales
@@ -142,131 +142,4 @@ function shuffleBoard(){
   for(let i=0;i<3;i++){
     const a = state.board[rand(state.board.length)];
     const b = state.board[rand(state.board.length)];
-    const tmp = {r:a.r,c:a.c}; a.r=b.r; a.c=b.c; b.r=tmp.r; b.c=tmp.c;
-  }
-}
-
-function doNexoEvent(){
-  const roll = rand(3);
-  if(roll===0){
-    shuffleBoard();
-    log("Cizalla Dimensional: varias islas cambian de posición.");
-  }else if(roll===1){
-    const owned = state.board.filter(t=>t.owner);
-    if(owned.length){
-      const t = owned[rand(owned.length)];
-      const p = state.players.find(x=>x.id===t.owner);
-      p.points += 2;
-      log(`Reliquia Antigua en isla de ${p.name}: +2 Puntos de Nexo.`);
-    }
-  }else{
-    state.players.forEach(p=>p.resources.energy+=1);
-    log("Tormenta Etérea: todos ganan +1⚡.");
-  }
-}
-
-function doDiplomacy(){
-  if(state.players.length<2) return;
-  if(Math.random()<0.2){
-    const a = state.players[rand(state.players.length)];
-    let b; do{ b = state.players[rand(state.players.length)]; }while(b.id===a.id);
-    a.points += 2; b.points += 2;
-    log(`Alianza honrada entre ${a.name} y ${b.name}: +2 cada uno.`);
-  }else{
-    log("Sin acuerdos diplomáticos relevantes.");
-  }
-}
-
-function checkVictory(){
-  const winner = state.players.find(p => p.points >= 10);
-  if(winner){
-    gameOver = true;
-    log(`🏆 ${winner.name} alcanza 10 Puntos de Nexo. ¡Victoria!`);
-    alert(`🏆 ${winner.name} gana la partida`);
-  }
-}
-
-function nextPhase(){
-  if(gameOver) return;
-
-  const p = PHASES[state.phase];
-  if(p==="Producción") doProduction();
-  if(p==="Movimiento") doMovement();
-  if(p==="Acción") doAction();
-  if(p==="Evento del Nexo") doNexoEvent();
-  if(p==="Diplomacia") doDiplomacy();
-
-  state.phase++;
-  if(state.phase>=PHASES.length){
-    state.phase = 0;
-    state.turn++;
-    checkVictory();
-  }
-  renderAll();
-}
-
-function newGame(players=3){
-  gameOver = false;
-  state.turn = 1; state.phase = 0; state.log = [];
-  newBoard();
-  newPlayers(players);
-  renderAll();
-  log("Nueva partida creada.");
-}
-
-// --- Render ---
-const canvas = document.getElementById("board");
-const ctx = canvas.getContext("2d");
-
-function drawBoard(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const margin = 40;
-  const cw = (canvas.width - margin*2) / state.size.cols;
-  const ch = (canvas.height - margin*2) / state.size.rows;
-  state.board.forEach(t=>{
-    const x = margin + t.c*cw + cw/2;
-    const y = margin + t.r*ch + ch/2;
-    // casilla
-    ctx.beginPath();
-    ctx.rect(x-cw*0.45, y-ch*0.45, cw*0.9, ch*0.9);
-    const fills = {food:"#1b5e20", energy:"#283593", metal:"#4e342e"};
-    ctx.fillStyle = fills[t.type];
-    ctx.fill();
-    ctx.strokeStyle = "#0b1020";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    // borde por dueño
-    if(t.owner){
-      const p = state.players.find(x=>x.id===t.owner);
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 4;
-      ctx.strokeRect(x-cw*0.45, y-ch*0.45, cw*0.9, ch*0.9);
-    }
-    // texto
-    ctx.fillStyle = "#e9efff";
-    ctx.font = "14px system-ui";
-    const icon = t.type==="food"?"🍖":(t.type==="energy"?"⚡":"⛓️");
-    ctx.fillText(icon+" "+t.troops, x-cw*0.4, y);
-  });
-}
-
-function renderSidebar(){
-  document.getElementById("phase").textContent = "Fase: "+PHASES[state.phase];
-  document.getElementById("turn").textContent = " | Turno: "+state.turn;
-  const ps = state.players.map(p=>{
-    return `<div class="tag"><b>${p.name}</b> — <span class="small">${p.civ.name}</span> — Puntos: ${p.points} — 🍖${p.resources.food} ⚡${p.resources.energy} ⛓️${p.resources.metal}</div>`;
-  }).join("");
-  document.getElementById("players").innerHTML = ps;
-  document.getElementById("log").innerHTML = state.log.map(x=>`• ${x}`).join("<br/>");
-}
-
-function renderAll(){ drawBoard(); renderSidebar(); }
-
-// --- Eventos UI ---
-document.getElementById("newGame").addEventListener("click", ()=>newGame(3));
-document.getElementById("nextPhase").addEventListener("click", nextPhase);
-document.getElementById("resetGame").addEventListener("click", ()=>newGame(3));
-
-// Boot
-newGame(3);
-renderAll();
+    const tmp = {r:a.r,c:a.c};
