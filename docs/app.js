@@ -8,11 +8,8 @@ const CIVS = [
 ];
 
 // --- Config extra ---
-const LOG_LIMIT = 40;
+const LOG_LIMIT = 40;  // número máximo de líneas en el log
 let gameOver = false;
-
-// (aquí sigue el resto de tu código con rand(), roll2d6(), state, etc.)
-
 
 function rand(n){ return Math.floor(Math.random()*n); }
 function roll2d6(){ return 1+rand(6) + 1+rand(6); }
@@ -22,7 +19,7 @@ const state = {
   turn: 1,
   phase: 0,
   players: [],
-  board: [],             // casillas con tipo y dueño
+  board: [],
   size: {cols: 6, rows: 4},
   log: [],
 };
@@ -34,8 +31,7 @@ function log(msg){
   renderSidebar();
 }
 
-
-// --- Tablero ---
+// --- Tablero y jugadores ---
 function newBoard(){
   const tiles = [];
   for(let r=0;r<state.size.rows;r++){
@@ -170,15 +166,6 @@ function doNexoEvent(){
 }
 
 function doDiplomacy(){
-  function checkVictory(){
-  const winner = state.players.find(p => p.points >= 10);
-  if(winner){
-    gameOver = true;
-    log(`🏆 ${winner.name} alcanza 10 Puntos de Nexo. ¡Victoria!`);
-    alert(`🏆 ${winner.name} gana la partida`);
-  }
-}
-
   if(state.players.length<2) return;
   if(Math.random()<0.2){
     const a = state.players[rand(state.players.length)];
@@ -190,7 +177,33 @@ function doDiplomacy(){
   }
 }
 
-function nextPhase
+function checkVictory(){
+  const winner = state.players.find(p => p.points >= 10);
+  if(winner){
+    gameOver = true;
+    log(`🏆 ${winner.name} alcanza 10 Puntos de Nexo. ¡Victoria!`);
+    alert(`🏆 ${winner.name} gana la partida`);
+  }
+}
+
+function nextPhase(){
+  if(gameOver) return;
+
+  const p = PHASES[state.phase];
+  if(p==="Producción") doProduction();
+  if(p==="Movimiento") doMovement();
+  if(p==="Acción") doAction();
+  if(p==="Evento del Nexo") doNexoEvent();
+  if(p==="Diplomacia") doDiplomacy();
+
+  state.phase++;
+  if(state.phase>=PHASES.length){
+    state.phase = 0;
+    state.turn++;
+    checkVictory();
+  }
+  renderAll();
+}
 
 function newGame(players=3){
   gameOver = false;
@@ -200,6 +213,10 @@ function newGame(players=3){
   renderAll();
   log("Nueva partida creada.");
 }
+
+// --- Render ---
+const canvas = document.getElementById("board");
+const ctx = canvas.getContext("2d");
 
 function drawBoard(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -248,10 +265,7 @@ function renderAll(){ drawBoard(); renderSidebar(); }
 // --- Eventos UI ---
 document.getElementById("newGame").addEventListener("click", ()=>newGame(3));
 document.getElementById("nextPhase").addEventListener("click", nextPhase);
-document.getElementById("newGame").addEventListener("click", ()=>newGame(3));
-document.getElementById("nextPhase").addEventListener("click", nextPhase);
 document.getElementById("resetGame").addEventListener("click", ()=>newGame(3));
-
 
 // Boot
 newGame(3);
