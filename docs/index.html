@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Eternum: Guerras del Nexo — Prototype</title>
 
-  <!-- CSS EMBEBIDO: elimina dependencia de styles.css -->
+  <!-- CSS EMBEBIDO: no dependemos de styles.css -->
   <style>
   :root{
     --bg:#0a0f1f; --panel:#10183a; --panel-2:#121e4f; --accent:#5e7bff;
@@ -36,7 +36,9 @@
   #players .small{opacity:.85;font-size:.9em}
   #log{max-height:220px;overflow:auto}
   #log .line{padding:4px 6px;border-radius:8px;margin:2px 0;background:rgba(255,255,255,.02)}
-  #log .win{background:rgba(88,242,155,.08)} .log .warn{background:rgba(255,209,102,.08)} .log .bad{background:rgba(255,107,107,.08)}
+  #log .win{background:rgba(88,242,155,.08)}
+  #log .warn{background:rgba(255,209,102,.08)}
+  #log .bad{background:rgba(255,107,107,.08)}
   #board{display:block;width:100%;min-height:360px;border-radius:16px;border:1px solid #1d2554;background: radial-gradient(800px 500px at 50% 20%, #14255a 0%, #0b1436 55%, #08102a 100%);box-shadow:var(--shadow)}
   .cards{margin-top:12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
   .card{width:110px;height:150px;border-radius:16px;position:relative;background:linear-gradient(180deg, #1b2b6d, #10183a);border:1px solid #2a3a8a;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;font-weight:800;}
