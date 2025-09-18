@@ -8,21 +8,27 @@
 </head>
 <body>
   <div id="app">
-    <h1>🎮 Eternum: Guerras del Nexo — Prototype</h1>
-    <div class="bar">
-      <button id="newGame">Nueva partida</button>
-      <button id="nextPhase">Siguiente fase</button>
-      <button id="resetGame">Reiniciar</button>
-      <span id="phase"></span>
-      <span id="turn"></span>
-    </div>
-    <div class="status">
-      <div id="players"></div>
-      <div id="log"></div>
-    </div>
-    <canvas id="board" width="960" height="640"></canvas>
+  <h1>🎮 Eternum: Guerras del Nexo — Prototype</h1>
+  <div class="bar">
+    <button id="newGame">Nueva partida</button>
+    <button id="nextPhase">Siguiente fase</button>
+    <button id="resetGame">Reiniciar</button>
+    <span class="badge"><span id="phase"></span><span id="turn"></span></span>
   </div>
-  <script src="app.js"></script>
-</body>
-</html>
+
+  <div class="status">
+    <div id="players" class="panel"></div>
+    <div id="log" class="panel"></div>
+  </div>
+
+  <canvas id="board" width="960" height="640"></canvas>
+
+  <!-- Barra de “cartas” decorativa (UI) -->
+  <div class="cards">
+    <div class="card">Tropas</div>
+    <div class="card">Fortif.</div>
+    <div class="card">Puente</div>
+    <div class="card">Energía</div>
+  </div>
+</div>
 
