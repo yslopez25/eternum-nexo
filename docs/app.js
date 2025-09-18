@@ -28,7 +28,12 @@ const state = {
 };
 
 // --- Utilidades UI ---
-function log(msg){ state.log.unshift(msg); renderSidebar(); }
+function log(msg){
+  state.log.unshift(msg);
+  if(state.log.length > LOG_LIMIT) state.log = state.log.slice(0, LOG_LIMIT);
+  renderSidebar();
+}
+
 
 // --- Tablero ---
 function newBoard(){
