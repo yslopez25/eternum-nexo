@@ -190,20 +190,7 @@ function doDiplomacy(){
   }
 }
 
-function nextPhase(){
-  const p = PHASES[state.phase];
-  if(p==="Producción") doProduction();
-  if(p==="Movimiento") doMovement();
-  if(p==="Acción") doAction();
-  if(p==="Evento del Nexo") doNexoEvent();
-  if(p==="Diplomacia") doDiplomacy();
-
-  state.phase++;
-  if(state.phase>=PHASES.length){
-    state.phase = 0; state.turn++;
-  }
-  renderAll();
-}
+function nextPhase
 
 function newGame(players=3){
   state.turn = 1; state.phase = 0; state.log = [];
