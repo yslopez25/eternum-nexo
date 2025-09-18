@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eternum: Guerras del Nexo — Prototype</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <h1>🎮 Eternum: Guerras del Nexo — Prototype</h1>
+    <div class="bar">
+      <button id="newGame">Nueva partida</button>
+      <button id="nextPhase">Siguiente fase</button>
+      <span id="phase"></span>
+      <span id="turn"></span>
+    </div>
+    <div class="status">
+      <div id="players"></div>
+      <div id="log"></div>
+    </div>
+    <canvas id="board" width="960" height="640"></canvas>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
