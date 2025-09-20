@@ -11,8 +11,11 @@ const LOG_LIMIT = 40;
 let gameOver = false;
 const PLAYER_COLORS = ["#6ee7b7","#93c5fd","#f9a8d4","#fcd34d"];
 
+// Estado base
 const state = {
-  turn: 1, phase: 0, players: [], board: [], size: {cols: 6, rows: 4}, log: [],
+  turn: 1, phase: 0, players: [], board: [],
+  size: {cols: 6, rows: 4}, log: [],
+  selectedTileId: null
 };
 
 // ===================== AUDIO (SONIDOS) =====================
@@ -55,18 +58,21 @@ class SFX {
 }
 const sfx = new SFX();
 
-// Hook UI audio
+// Hook UI audio (controles en la dock)
 const volEl = document.getElementById("vol");
 const muteEl = document.getElementById("mute");
-volEl.value = sfx.volume;
-muteEl.textContent = sfx.muted ? "🔇" : "🔊";
-volEl.addEventListener("input", e=>{ sfx.setVolume(parseFloat(e.target.value)); });
-muteEl.addEventListener("click", ()=>{ sfx.setMuted(!sfx.muted); muteEl.textContent = sfx.muted ? "🔇" : "🔊"; sfx.click(); });
+if(volEl && muteEl){
+  volEl.value = sfx.volume;
+  muteEl.textContent = sfx.muted ? "🔇" : "🔊";
+  volEl.addEventListener("input", e=>{ sfx.setVolume(parseFloat(e.target.value)); });
+  muteEl.addEventListener("click", ()=>{ sfx.setMuted(!sfx.muted); muteEl.textContent = sfx.muted ? "🔇" : "🔊"; sfx.click(); });
+}
 
 // ===================== UTIL =====================
 function rand(n){ return Math.floor(Math.random()*n); }
 function roll2d6(){ return 1+rand(6) + 1+rand(6); }
 function log(msg){ state.log.unshift(msg); if(state.log.length>LOG_LIMIT) state.log=state.log.slice(0,LOG_LIMIT); renderSidebar(); }
+function ownerOf(tile){ return tile.owner ? state.players.find(p=>p.id===tile.owner) : null; }
 
 // ===================== EFECTOS VISUALES =====================
 const effects = []; // {tileId, kind:'shake'|'pulse', color?, started, duration}
@@ -90,7 +96,7 @@ function newPlayers(n=3){
   state.players=[];
   for(let i=0;i<n;i++){
     const civ=CIVS[i%CIVS.length];
-    state.players.push({ id:`P${i+1}`, name:`Jugador ${i+1}`, civ, resources:{food:3,energy:1,metal:2}, points:0, color:PLAYER_COLORS[i%PLAYER_COLORS.length] });
+    state.players.push({ id:`P${i+1}`, name:`Jugador ${i+1}`, civ, resources:{food:3, energy:1, metal:2}, points:0, color:PLAYER_COLORS[i%PLAYER_COLORS.length] });
   }
   const used=new Set();
   state.players.forEach(p=>{
@@ -184,16 +190,15 @@ function nextPhase(){
   renderAll();
 }
 
-// Ejecutor de un turno completo (5 fases)
+// Turno completo
 async function playFullTurn(){
   if(gameOver) return;
-  // pequeña pausa entre fases para que se noten efectos/audio
   for(let i=0;i<5;i++){ nextPhase(); await new Promise(r=>setTimeout(r,140)); if(gameOver) break; }
 }
 
 // ===================== RENDER =====================
 const canvas=document.getElementById("board"); const ctx=canvas.getContext("2d");
-const mini=document.getElementById("minimap"); const mctx=mini.getContext("2d");
+const mini=document.getElementById("minimap"); const mctx=mini ? mini.getContext("2d") : null;
 
 function drawRoundedRect(x,y,w,h,r){
   ctx.beginPath(); ctx.moveTo(x+r,y);
@@ -203,9 +208,8 @@ function drawRoundedRect(x,y,w,h,r){
 function tileRect(t){
   const margin=40, cw=(canvas.width - margin*2)/state.size.cols, ch=(canvas.height - margin*2)/state.size.rows;
   const x=margin + t.c*cw + cw*0.05, y=margin + t.r*ch + ch*0.05, w=cw*0.9, h=ch*0.9;
-  return {x,y,w,h};
+  return {x,y,w,h,cw,ch,margin};
 }
-
 function drawBoard(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   // niebla sutil
@@ -222,61 +226,4 @@ function drawBoard(){
     // sombra + relleno
     ctx.save(); ctx.shadowColor="rgba(0,0,0,.45)"; ctx.shadowBlur=18; ctx.shadowOffsetY=6;
     const fills={food:"#2a7a34", energy:"#2f3da0", metal:"#694a2f"};
-    drawRoundedRect(x,y,w,h,14);
-    const grad=ctx.createLinearGradient(x,y,x,y+h); grad.addColorStop(0,"#ffffff12"); grad.addColorStop(1,"#00000012");
-    ctx.fillStyle=fills[t.type]||"#2a2a2a"; ctx.fill(); ctx.fillStyle=grad; ctx.fill(); ctx.restore();
-
-    ctx.lineWidth=2; ctx.strokeStyle="#0b1020"; drawRoundedRect(x,y,w,h,14); ctx.stroke();
-
-    if(t.owner){ const idx=Math.max(0,state.players.findIndex(p=>p.id===t.owner)); const glow=PLAYER_COLORS[idx%PLAYER_COLORS.length];
-      ctx.save(); ctx.shadowColor=glow; ctx.shadowBlur=14; ctx.lineWidth=3; ctx.strokeStyle=glow; drawRoundedRect(x,y,w,h,14); ctx.stroke(); ctx.restore(); }
-
-    // pulse
-    const ePulse=effects.find(e=>e.tileId===t.id && e.kind==="pulse");
-    if(ePulse){ const dt=(tNow-ePulse.started)/ePulse.duration; if(dt>=0 && dt<=1){ const alpha=0.45*(1-dt), spread=6+dt*14; ctx.save(); ctx.shadowColor=ePulse.color||"#fff"; ctx.shadowBlur=22+dt*30; ctx.lineWidth=3+dt*4; ctx.strokeStyle=`rgba(255,255,255,${alpha})`; drawRoundedRect(x-spread,y-spread,w+spread*2,h+spread*2,18); ctx.stroke(); ctx.restore(); } }
-
-    // texto
-    ctx.fillStyle="#e9efff"; ctx.font="14px system-ui";
-    const icon=t.type==="food"?"🍖":(t.type==="energy"?"⚡":"⛓️");
-    ctx.fillText(icon+" "+t.troops, x+8, y+20);
-  });
-
-  cleanupEffects();
-  drawMinimap();
-}
-
-function drawMinimap(){
-  mctx.clearRect(0,0,mini.width,mini.height);
-  const cols=state.size.cols, rows=state.size.rows;
-  const cw=mini.width/cols, ch=mini.height/rows;
-  state.board.forEach(t=>{
-    const x=t.c*cw, y=t.r*ch, w=cw-1, h=ch-1;
-    const fills={food:"#2a7a34", energy:"#2f3da0", metal:"#694a2f"};
-    mctx.fillStyle=fills[t.type]; mctx.fillRect(x,y,w,h);
-    if(t.owner){ const idx=Math.max(0,state.players.findIndex(p=>p.id===t.owner)); mctx.strokeStyle=PLAYER_COLORS[idx%PLAYER_COLORS.length]; mctx.lineWidth=2; mctx.strokeRect(x+1,y+1,w-2,h-2); }
-  });
-}
-
-function renderSidebar(){
-  document.getElementById("phase").textContent = "Fase: "+PHASES[state.phase];
-  document.getElementById("turn").textContent  = " | Turno: "+state.turn;
-  document.getElementById("players").innerHTML = state.players.map(p=>
-    `<div class="tag"><b>${p.name}</b> — <span class="small">${p.civ.name}</span> — Puntos: ${p.points} — 🍖${p.resources.food} ⚡${p.resources.energy} ⛓️${p.resources.metal}</div>`
-  ).join("");
-  document.getElementById("log").innerHTML = state.log.map(x=>{
-    const cls = x.includes("conquistada")?"win":(x.includes("Tormenta")||x.includes("Cizalla"))?"warn":x.includes("pierde 1 tropa")?"bad":"";
-    return `<div class="line ${cls}">• ${x}</div>`;
-  }).join("");
-}
-function renderAll(){ renderSidebar(); }
-
-// ===================== EVENTOS UI =====================
-document.getElementById("newGame").addEventListener("click", ()=>{ sfx.click(); newGame(3); });
-document.getElementById("nextPhase").addEventListener("click", ()=>{ sfx.click(); nextPhase(); });
-document.getElementById("playTurn").addEventListener("click", ()=>{ sfx.click(); playFullTurn(); });
-document.getElementById("resetGame").addEventListener("click", ()=>{ sfx.click(); newGame(3); });
-
-// ===================== BOOT + ANIM LOOP =====================
-function tick(){ drawBoard(); rafId=requestAnimationFrame(tick); }
-function newGame(players=3){ gameOver=false; state.turn=1; state.phase=0; state.log=[]; effects.length=0; newBoard(); newPlayers(players); renderAll(); log("Nueva partida creada."); }
-newGame(3); renderAll(); if(rafId) cancelAnimationFrame(rafId); tick();
+    drawRoundedRec
