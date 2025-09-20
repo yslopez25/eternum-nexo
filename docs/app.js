@@ -95,5 +95,3 @@ function newPlayers(n=3){
   });
 }
 function neighbors(tile){ return state.board.filter(t => (Math.abs(t.r - tile.r) + Math.abs(t.c - tile.c) === 1)); }
-
-// =====
