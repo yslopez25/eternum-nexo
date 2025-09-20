@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Eternum: Guerras del Nexo — Prototype</title>
 
-  <!-- CSS EMBEBIDO: no dependemos de styles.css -->
+  <!-- CSS EMBEBIDO (evitamos 404 de styles.css) -->
   <style>
   :root{
-    --bg:#0a0f1f; --panel:#10183a; --panel-2:#121e4f; --accent:#5e7bff;
-    --accent-2:#00d4ff; --text:#e9efff; --shadow: 0 10px 30px rgba(0,0,0,.35);
+    --bg:#0a0f1f; --panel:#0f1736; --panel-2:#121e4f; --accent:#5e7bff;
+    --accent-2:#00d4ff; --text:#e9efff; --shadow:0 10px 30px rgba(0,0,0,.35);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -17,66 +17,98 @@
     margin:0; font-family:system-ui,Segoe UI,Arial,sans-serif;
     background: radial-gradient(1200px 700px at 30% -10%, #1b2560 0%, var(--bg) 60%),
                 radial-gradient(900px 600px at 120% 20%, #10234d 0%, var(--bg) 55%),
-                var(--bg);
-    color:var(--text);
+                var(--bg); color:var(--text);
   }
-  #app{max-width:1100px;margin:0 auto;padding:16px}
-  h1{margin:0 0 12px;font-weight:800;letter-spacing:.2px;text-shadow:0 2px 0 rgba(0,0,0,.25)}
-  .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-  .bar button{
-    background:linear-gradient(180deg, var(--accent), #3e54f5);
-    color:#fff;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;
-    box-shadow:var(--shadow);font-weight:700;letter-spacing:.2px
-  }
-  .bar button:hover{filter:brightness(1.08)}
-  .badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(180deg,var(--panel-2),#0b1230);padding:6px 10px;border-radius:10px;border:1px solid #1e275a}
-  .status{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+  #app{max-width:1100px;margin:0 auto;padding:12px 12px 90px} /* espacio para barra inferior */
+  h1{display:none} /* HUD superior oculto en móvil */
+
+  /* Paneles */
+  .status{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
   .panel{background:linear-gradient(180deg,var(--panel),#0b1230);border:1px solid #1d2554;border-radius:16px;padding:10px;box-shadow:var(--shadow);}
   #players .tag{display:block;margin:6px 0;padding:8px 10px;border-radius:12px;background:rgba(30,37,84,.55);border:1px solid #273079}
   #players .small{opacity:.85;font-size:.9em}
-  #log{max-height:220px;overflow:auto}
+  #log{max-height:180px;overflow:auto}
   #log .line{padding:4px 6px;border-radius:8px;margin:2px 0;background:rgba(255,255,255,.02)}
   #log .win{background:rgba(88,242,155,.08)}
   #log .warn{background:rgba(255,209,102,.08)}
   #log .bad{background:rgba(255,107,107,.08)}
-  #board{display:block;width:100%;min-height:360px;border-radius:16px;border:1px solid #1d2554;background: radial-gradient(800px 500px at 50% 20%, #14255a 0%, #0b1436 55%, #08102a 100%);box-shadow:var(--shadow)}
-  .cards{margin-top:12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-  .card{width:110px;height:150px;border-radius:16px;position:relative;background:linear-gradient(180deg, #1b2b6d, #10183a);border:1px solid #2a3a8a;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;font-weight:800;}
-  .card::after{content:"";position:absolute;inset:0;border-radius:16px;box-shadow: inset 0 0 0 2px rgba(255,255,255,.06), 0 12px 20px rgba(0,0,0,.35);pointer-events:none;}
+
+  /* Tablero */
+  #board{
+    display:block;width:100%;min-height:360px;border-radius:16px;border:1px solid #1d2554;
+    background: radial-gradient(800px 500px at 50% 20%, #14255a 0%, #0b1436 55%, #08102a 100%);
+    box-shadow:var(--shadow)
+  }
+
+  /* Minimapa fijo arriba-derecha */
+  .minimap-wrap{position:fixed; top:10px; right:10px; width:96px; height:96px; border:1px solid #2a3a8a; border-radius:12px; background:#0b1436aa; backdrop-filter:blur(4px); box-shadow:var(--shadow); z-index:5}
+  #minimap{width:100%;height:100%;display:block;border-radius:12px}
+
+  /* Barra inferior (zona pulgar) */
+  .dock{
+    position:fixed; left:0; right:0; bottom:0; padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px);
+    background:linear-gradient(180deg, #0d1430dd, #0a0f1fef); border-top:1px solid #1d2554; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap;
+  }
+  .btn{
+    width:64px; height:64px; border-radius:999px; border:1px solid #2a3a8a;
+    background:linear-gradient(180deg, var(--accent), #3e54f5); color:#fff; font-weight:800;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:var(--shadow);
+    user-select:none; -webkit-tap-highlight-color:transparent;
+  }
+  .btn.secondary{background:linear-gradient(180deg, #1b2b6d, #10183a)}
+  .btn:active{transform:translateY(1px)}
+  .pill{
+    display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border-radius:999px; border:1px solid #2a3a8a;
+    background:linear-gradient(180deg, var(--panel-2), #0b1230); color:#e9efff; font-weight:700;
+  }
+  .pill small{opacity:.85}
+
+  /* Slider volumen */
+  .vol{appearance:none; width:110px; height:8px; border-radius:8px; background:#1d2a66; outline:none}
+  .vol::-webkit-slider-thumb{appearance:none; width:18px; height:18px; border-radius:50%; background:#5e7bff; border:2px solid #9fb0ff}
+
+  /* Responsive */
+  @media (min-width:900px){
+    h1{display:block;margin:0 0 10px}
+    #app{padding-bottom:110px}
+  }
   </style>
 </head>
 <body>
-  <div id="app">
-    <h1>🎮 Eternum: Guerras del Nexo — Prototype</h1>
-    <div class="bar">
-      <button id="newGame">Nueva partida</button>
-      <button id="nextPhase">Siguiente fase</button>
-      <button id="resetGame">Reiniciar</button>
-      <span class="badge"><span id="phase"></span><span id="turn"></span></span>
-    </div>
+  <div class="minimap-wrap"><canvas id="minimap" width="96" height="96"></canvas></div>
 
+  <div id="app">
+    <!-- HUD lateral superior oculto: mostramos players/log arriba para test -->
     <div class="status">
       <div id="players" class="panel"></div>
       <div id="log" class="panel"></div>
     </div>
 
     <canvas id="board" width="960" height="640"></canvas>
+  </div>
 
-    <div class="cards">
-      <div class="card">Tropas</div>
-      <div class="card">Fortif.</div>
-      <div class="card">Puente</div>
-      <div class="card">Energía</div>
+  <!-- Barra inferior (acciones + estado + sonido) -->
+  <div class="dock">
+    <div class="btn" id="newGame" title="Nueva partida">↻</div>
+    <div class="btn" id="nextPhase" title="Siguiente fase">▶</div>
+    <div class="btn" id="playTurn" title="Turno completo">⏭</div>
+    <div class="btn secondary" id="resetGame" title="Reiniciar">⌫</div>
+
+    <span class="pill"><span id="phase">Fase</span><small id="turn">| Turno</small></span>
+
+    <div class="pill" style="gap:10px">
+      <button class="btn secondary" id="mute" style="width:48px;height:48px" title="Silencio">🔊</button>
+      <input class="vol" type="range" id="vol" min="0" max="1" step="0.01" />
     </div>
   </div>
 
-  <!-- Diagnóstico simple -->
+  <!-- Mostrar errores JS si hubiera -->
   <script>
     window.addEventListener('error', e => {
       const pre = document.createElement('pre');
       pre.textContent = 'Error JS: ' + e.message;
-      pre.style = 'background:#330; color:#ffcc66; padding:8px; border:1px solid #663; border-radius:8px; white-space:pre-wrap;';
-      document.body.prepend(pre);
+      pre.style = 'background:#330; color:#ffcc66; padding:8px; border:1px solid #663; border-radius:8px; white-space:pre-wrap; position:fixed; left:10px; bottom:90px; z-index:9999';
+      document.body.appendChild(pre);
     });
   </script>
 
