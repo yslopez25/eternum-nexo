@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Eternum: Guerras del Nexo — Prototype</title>
 
-  <!-- CSS EMBEBIDO (evitamos 404 de styles.css) -->
+  <!-- CSS EMBEBIDO -->
   <style>
   :root{
     --bg:#0a0f1f; --panel:#0f1736; --panel-2:#121e4f; --accent:#5e7bff;
@@ -19,8 +19,7 @@
                 radial-gradient(900px 600px at 120% 20%, #10234d 0%, var(--bg) 55%),
                 var(--bg); color:var(--text);
   }
-  #app{max-width:1100px;margin:0 auto;padding:12px 12px 90px} /* espacio para barra inferior */
-  h1{display:none} /* HUD superior oculto en móvil */
+  #app{max-width:1100px;margin:0 auto;padding:12px 12px 90px}
 
   /* Paneles */
   .status{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
@@ -33,18 +32,31 @@
   #log .warn{background:rgba(255,209,102,.08)}
   #log .bad{background:rgba(255,107,107,.08)}
 
-  /* Tablero */
+  /* Tablero y minimapa */
+  .board-wrap{position:relative}
   #board{
     display:block;width:100%;min-height:360px;border-radius:16px;border:1px solid #1d2554;
     background: radial-gradient(800px 500px at 50% 20%, #14255a 0%, #0b1436 55%, #08102a 100%);
     box-shadow:var(--shadow)
   }
+  .minimap-wrap{
+    position:absolute; top:12px; right:12px; width:112px; height:112px; z-index:5;
+    border:1px solid #2a3a8a; border-radius:12px; background:#0b1436cc; backdrop-filter:blur(4px); box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; gap:6px; padding:6px;
+  }
+  #minimap{display:block; width:96px; height:96px; border-radius:8px}
+  .mm-controls{
+    position:absolute; top:6px; right:6px; display:flex; gap:6px;
+  }
+  .mm-btn{
+    width:28px;height:28px;border-radius:999px;border:1px solid #2a3a8a;
+    background:linear-gradient(180deg, #1b2b6d, #10183a); color:#e9efff; font-weight:800;
+    display:flex;align-items:center;justify-content:center;cursor:pointer; box-shadow:var(--shadow)
+  }
+  .minimap-wrap.minimized{width:auto;height:auto;padding:0}
+  .minimap-wrap.minimized #minimap{display:none}
 
-  /* Minimapa fijo arriba-derecha */
-  .minimap-wrap{position:fixed; top:10px; right:10px; width:96px; height:96px; border:1px solid #2a3a8a; border-radius:12px; background:#0b1436aa; backdrop-filter:blur(4px); box-shadow:var(--shadow); z-index:5}
-  #minimap{width:100%;height:100%;display:block;border-radius:12px}
-
-  /* Barra inferior (zona pulgar) */
+  /* Dock inferior */
   .dock{
     position:fixed; left:0; right:0; bottom:0; padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px);
     background:linear-gradient(180deg, #0d1430dd, #0a0f1fef); border-top:1px solid #1d2554; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap;
@@ -62,32 +74,34 @@
     background:linear-gradient(180deg, var(--panel-2), #0b1230); color:#e9efff; font-weight:700;
   }
   .pill small{opacity:.85}
-
-  /* Slider volumen */
   .vol{appearance:none; width:110px; height:8px; border-radius:8px; background:#1d2a66; outline:none}
   .vol::-webkit-slider-thumb{appearance:none; width:18px; height:18px; border-radius:50%; background:#5e7bff; border:2px solid #9fb0ff}
 
-  /* Responsive */
-  @media (min-width:900px){
-    h1{display:block;margin:0 0 10px}
-    #app{padding-bottom:110px}
+  @media (max-width:700px){
+    #log{max-height:140px}
+    .minimap-wrap{top:8px; right:8px}
   }
   </style>
 </head>
 <body>
-  <div class="minimap-wrap"><canvas id="minimap" width="96" height="96"></canvas></div>
-
   <div id="app">
-    <!-- HUD lateral superior oculto: mostramos players/log arriba para test -->
     <div class="status">
       <div id="players" class="panel"></div>
       <div id="log" class="panel"></div>
     </div>
 
-    <canvas id="board" width="960" height="640"></canvas>
+    <div class="board-wrap">
+      <canvas id="board" width="960" height="640"></canvas>
+      <div class="minimap-wrap" id="mmWrap">
+        <div class="mm-controls">
+          <button class="mm-btn" id="mmToggle" title="Mostrar/Ocultar">−</button>
+        </div>
+        <canvas id="minimap" width="96" height="96" title="Toca para seleccionar"></canvas>
+      </div>
+    </div>
   </div>
 
-  <!-- Barra inferior (acciones + estado + sonido) -->
+  <!-- Barra inferior -->
   <div class="dock">
     <div class="btn" id="newGame" title="Nueva partida">↻</div>
     <div class="btn" id="nextPhase" title="Siguiente fase">▶</div>
